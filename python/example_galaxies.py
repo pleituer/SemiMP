@@ -3,14 +3,14 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from nonparametric import NonparametricMP
-from alpha import TrivialAlpha
+from alpha import TrivialAlpha, true_alpha_update
 
 from utils import phi, Phi
 from dataset import Galaxies
 
 data = Galaxies()
 
-alpha = TrivialAlpha(alpha=0.25)
+alpha = TrivialAlpha(alpha=2, alpha_updater=true_alpha_update)
 rho = 0.93
 
 mp = NonparametricMP(p0=phi, P0=Phi, rho=rho, alpha=alpha)

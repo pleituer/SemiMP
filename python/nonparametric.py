@@ -1,5 +1,4 @@
 import numpy as np
-from copy import deepcopy
 
 from alpha import GaussianCopula
 

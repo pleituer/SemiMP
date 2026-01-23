@@ -17,28 +17,26 @@ class SemiparametricRegressionMP():
         self.rho = rho
         self.alpha = alpha
     
-    def _old_update(self, ms, mu, sigma, yn, mun, sigman):
-        ## m^k_n <- m^k_{n-1} + alpha * mk_update(mk, mu, sigma2, z)
-        z = (yn - mun)/sigman
+    def _old_update(self, ms, mu, sigma, n):
+        ## m^k_n <- m^k_{n-1} + alpha * mk_update(mk, mu, sigma2, n)
         _C = (1 - self.rho**2) * sigma**2
-        m1_update = mu + self.rho * sigma * z
+        m1_update = mu + self.rho * sigma * self.zs[n-1]
         m2_update = m1_update**2 + _C
         m3_update = m1_update**3 + 3 * _C * m1_update 
         return np.array([m1_update, m2_update, m3_update]) - ms
     
-    def _update(self, ms, mu, sigma, yn, mun, sigman):
-        z = (yn - mun)/sigman
-        _mu = mu + self.rho * sigma * z
+    def _update(self, ms, mu, sigma, n):
+        _mu = mu + self.rho * sigma * self.zs[n-1]
         _sigma2 = (1 - self.rho**2) * sigma**2
-        _v = sigma/sigman
-        _kappa3 = _v**3 * (ms[2] - 3*mun*sigman**2 - mun**3)
+        _v = sigma/self.sigma[n-1]
+        _kappa3 = _v**3 * (self.ms[2, n-1] - 3*self.mu[n-1]*self.sigma[n-1]**2 - self.mu[n-1]**3)
         m1_update = _mu
         m2_update = _mu**2 + _sigma2
         m3_update = _mu**3 + 3*_mu*_sigma2 - (mu**3 + 3*mu*sigma**2 + self.rho**3 * _kappa3)
         return np.array([m1_update, m2_update, m3_update]) - ms
     
-    def update(self, ms, mu, sigma2, yn, mun, sigman):
-        return self._update(ms, mu, sigma2, yn, mun, sigman)
+    def update(self, ms, mu, sigma2, n):
+        return self._update(ms, mu, sigma2, n)
     
     def set_update(self, new_update):
         ## first 2 must be first moment and second moment
@@ -64,7 +62,7 @@ class SemiparametricRegressionMP():
         for n in range(1, self.n):
             alpha_n = self.alpha(n, x[n:], x[n-1])
             self.zs[n-1] = (y[n-1] - self.mu[n-1])/self.sigma[n-1]
-            self.ms[:, n:] = self.ms[:, n:] + alpha_n * self.update(self.ms[:, n:], self.mu[n:], self.sigma[n:], y[n-1], self.mu[n-1], self.sigma[n-1])
+            self.ms[:, n:] = self.ms[:, n:] + alpha_n * self.update(self.ms[:, n:], self.mu[n:], self.sigma[n:], n)
             self.mu[n:] = self.ms[0, n:]
             self.sigma[n:] = np.sqrt(self.ms[1, n:] - self.ms[0, n:]**2)
 
@@ -85,7 +83,7 @@ class SemiparametricRegressionMP():
 
         for i in range(1, n+1):
             alpha_i = self.alpha(i, x_test, self.x[i-1]).flatten()
-            ms[:, i] = ms[:, i-1] + alpha_i * self.update(ms[:, i-1], mu[i-1], sigma[i-1], self.y[i-1], self.mu[i-1], self.sigma[i-1])
+            ms[:, i] = ms[:, i-1] + alpha_i * self.update(ms[:, i-1], mu[i-1], sigma[i-1], i)
             mu[i] = ms[0, i]
             sigma[i] = np.sqrt(ms[1, i] - ms[0, i]**2)
         
@@ -93,5 +91,5 @@ class SemiparametricRegressionMP():
             "mu": mu,
             "sigma": sigma,
             "sigma2": sigma**2,
-            "moments": ms
+            "moment": ms
         }
