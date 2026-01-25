@@ -29,7 +29,7 @@ class SemiparametricRegressionMP():
         _mu = mu + self.rho * sigma * self.zs[n-1]
         _sigma2 = (1 - self.rho**2) * sigma**2
         _v = sigma/self.sigma[n-1]
-        _kappa3 = _v**3 * (self.ms[2, n-1] - 3*self.mu[n-1]*self.sigma[n-1]**2 - self.mu[n-1]**3)
+        _kappa3 = _v**3 * (self.ms[2, n-1] - 3*self.mu[n-1]*self.ms[1, n-1] + 2*self.mu[n-1]**3)
         m1_update = _mu
         m2_update = _mu**2 + _sigma2
         m3_update = _mu**3 + 3*_mu*_sigma2 - (mu**3 + 3*mu*sigma**2 + self.rho**3 * _kappa3)
