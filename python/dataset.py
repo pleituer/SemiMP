@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from pydataset import data
 
-from utils import SEED, tukeysG_fromMeanVarSkew
+from utils import SEED, tukeysG_fromMeanVarSkew, sample_tukeysG
 
 class Dataset():
     def __init__(self, path, cols=None):
@@ -95,8 +95,7 @@ class SyntheticDataset(Dataset):
         skewnesses = self.skewness(self.x)
 
         mus, sigmas, gs = tukeysG_fromMeanVarSkew(means, variances, skewnesses)
-        Zs = np.random.normal(size=(n,))
-        samples = mus + sigmas * np.divide(np.exp(gs * Zs) - 1, gs, out=Zs, where=(gs!=0))
+        samples = sample_tukeysG(mus, sigmas, gs, size=(n,))
 
         self.data_df = pd.DataFrame(data={
             "x": self.x,
